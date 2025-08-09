@@ -52,8 +52,12 @@ const DataManagement = () => {
                 } else {
                     throw new Error("The selected file does not have the correct data structure.");
                 }
-            } catch (error: any) {
-                alert(`Error importing data: ${error.message}`);
+            } catch (error) {
+                if (error instanceof Error) {
+                    alert(`Error importing data: ${error.message}`);
+                } else {
+                    alert('An unknown error occurred during import.');
+                }
             }
         };
         reader.onerror = () => {

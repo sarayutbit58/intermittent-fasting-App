@@ -103,7 +103,7 @@ export default function Home() {
             <>
               <div className="p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-sm mx-auto mb-8 text-center">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                  You're not fasting
+                  You&apos;re not fasting
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300">
                   Ready to start your next fast?

@@ -14,9 +14,11 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ initialSettings, onSettings
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const { setTheme } = useTheme();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setSettings(prev => ({ ...prev, [name]: value as any }));
+    if (name === 'fastingMode') {
+        setSettings(prev => ({ ...prev, fastingMode: value as Settings['fastingMode'] }));
+    }
   };
 
   const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
