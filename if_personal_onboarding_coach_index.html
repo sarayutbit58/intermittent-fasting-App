@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IF Personal — Onboarding + Coach Algorithm</title>
+  <meta name="description" content="IF tracker แบบ static ไม่มี API โค้ชเชิงอัลกอริทึมและแบบสอบถามเริ่มต้น ปรับแผนส่วนบุคคลทั้งหมดฝั่งไคลเอนต์ เก็บข้อมูลใน LocalStorage พร้อม Export/Import JSON" />
+  <meta name="color-scheme" content="light dark" />
+  <style>
+    :root { --bg:#0b0c10; --surface:#111218; --card:#161821; --muted:#8a90a6; --text:#e8ecf1; --accent:#81e6d9; --accent2:#a78bfa; --ok:#34d399; --warn:#fbbf24; --bad:#f87171; --ring:#1f2937; --shadow:0 8px 20px rgba(0,0,0,.25); --radius:18px }
+    @media (prefers-color-scheme: light){ :root{ --bg:#f6f8fb; --surface:#ffffff; --card:#ffffff; --muted:#5b6478; --text:#0f172a; --accent:#0ea5e9; --accent2:#7c3aed; --ring:#e5e7eb; --shadow:0 10px 24px rgba(10,37,64,.08) }}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,Noto Sans; background:var(--bg); color:var(--text)}
+    a{color:var(--accent);text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;backdrop-filter:blur(8px);background:color-mix(in oklab,var(--bg) 88%,transparent);border-bottom:1px solid var(--ring);padding:12px 20px;z-index:20}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:var(--shadow)}
+    h1{font-size:18px;margin:0}
+    nav{display:flex;gap:6px;flex-wrap:wrap}
+    .tab{padding:8px 12px;border-radius:12px;border:1px solid var(--ring);background:var(--surface);cursor:pointer;font-size:14px}
+    .tab[aria-selected="true"]{outline:2px solid color-mix(in oklab,var(--accent) 60%,transparent)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .card{grid-column:span 12;background:var(--card);border:1px solid var(--ring);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+    @media (min-width:800px){.card.half{grid-column:span 6}.card.third{grid-column:span 4}}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .right{margin-left:auto}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input,select,textarea,button{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:10px 12px}
+    input[type="time"]{padding:8px 10px}
+    button{cursor:pointer}
+    .btn{background:var(--surface);border:1px solid var(--ring)}
+    .btn.primary{background:linear-gradient(180deg,color-mix(in oklab,var(--accent) 30%,transparent),transparent);border-color:color-mix(in oklab,var(--accent) 40%,var(--ring))}
+    .btn.ok{border-color:color-mix(in oklab,var(--ok) 50%,var(--ring))}
+    .btn.warn{border-color:color-mix(in oklab,var(--warn) 50%,var(--ring))}
+    .btn.bad{border-color:color-mix(in oklab,var(--bad) 50%,var(--ring))}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--ring);background:var(--surface);font-size:12px}
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+    .ring{--size:220px;width:var(--size);height:var(--size);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;margin:auto}
+    .ring svg{position:absolute;inset:0}
+    .ring .value{text-align:center;font-variant-numeric:tabular-nums}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .list .item{display:flex;gap:12px;align-items:center;justify-content:space-between;border:1px solid var(--ring);border-radius:14px;padding:12px;background:var(--surface)}
+    .section-title{font-weight:700;margin:0 0 10px 0;font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas;background:var(--surface);border:1px solid var(--ring);padding:2px 6px;border-radius:6px;font-size:12px}
+    details.help{border:1px dashed var(--ring);border-radius:14px;padding:10px 12px;background:color-mix(in oklab,var(--card) 90%,var(--surface) 10%)}
+    footer{text-align:center;color:var(--muted);padding:40px 0;font-size:12px}
+    .toast{position:fixed;bottom:18px;right:18px;background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);z-index:999;display:none}
+    .toast.show{display:block}
+    .progressbar{height:10px;background:var(--ring);border-radius:999px;overflow:hidden}
+    .progressbar>div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%}
+    dialog{border:1px solid var(--ring);border-radius:16px;padding:0;background:var(--card);color:var(--text);box-shadow:var(--shadow);max-width:760px}
+    dialog .dlg-head{padding:16px 18px;border-bottom:1px solid var(--ring);display:flex;align-items:center;justify-content:space-between}
+    dialog .dlg-body{padding:18px}
+    dialog .dlg-foot{padding:16px 18px;border-top:1px solid var(--ring);display:flex;gap:8px;justify-content:flex-end}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 8px;border-bottom:1px solid var(--ring);text-align:left;font-size:14px}
+    th{color:var(--muted);font-weight:600}
+    tr:hover td{background:color-mix(in oklab,var(--surface) 85%,transparent)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="logo" aria-hidden="true"></div><div><h1>IF Personal</h1><div class="small muted">Static • LocalStorage • No API • Coach + Onboarding</div></div></div>
+    <nav id="nav"></nav>
+  </header>
+  <main class="container"><section id="view"></section></main>
+  <div class="toast" role="status" id="toast"></div>
+
+  <!-- Onboarding: multi-step wizard -->
+  <dialog id="dlgOnboard" aria-labelledby="onboardTitle">
+    <div class="dlg-head"><strong id="onboardTitle">ตั้งค่าเริ่มต้น (3 ขั้น)</strong><button class="btn" onclick="dlgOnboard.close()">ปิด</button></div>
+    <div class="dlg-body">
+      <div id="onbStep1" class="grid">
+        <div class="card"><div class="section-title">1/3 ข้อมูลพื้นฐาน</div>
+          <div class="row">
+            <div><label>ชื่อเล่น</label><input id="obNickname" placeholder="เช่น HJ"/></div>
+            <div><label>ส่วนสูง (ซม.)</label><input type="number" id="obHeight" min="120" max="240" placeholder="175"/></div>
+            <div><label>น้ำหนักปัจจุบัน (กก.)</label><input type="number" id="obWeight" step="0.1" placeholder="72.4"/></div>
+            <div><label>น้ำหนักเป้าหมาย (กก.)</label><input type="number" id="obTargetW" step="0.1" placeholder="69.0"/></div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div><label>เวลาตื่นโดยทั่วไป</label><input type="time" id="obWake" value="06:30"/></div>
+            <div><label>เวลานอนโดยทั่วไป</label><input type="time" id="obSleep" value="23:00"/></div>
+            <div><label>ประสบการณ์ IF</label>
+              <select id="obExperience"><option value="beginner">มือใหม่</option><option value="regular">ทำมาบ้าง</option><option value="advanced">ชำนาญ</option></select>
+            </div>
+            <div><label>ระดับกิจกรรม</label>
+              <select id="obActivity"><option value="sedentary">นั่งทำงาน</option><option value="active">ออกกำลัง 3–5 วัน/สัปดาห์</option><option value="athlete">นักกีฬา/แรงงานหนัก</option></select>
+            </div>
+          </div>
+        </div>
+        <div class="card"><div class="section-title">ความปลอดภัย</div>
+          <div class="row">
+            <label class="pill"><input type="checkbox" id="obHasMedical"/> มีโรคประจำตัว/ใช้ยาที่ต้องกินพร้อมอาหาร</label>
+            <label class="pill"><input type="checkbox" id="obUnderweight"/> น้ำหนักต่ำ/ผอมมาก หรือ BMI ต่ำ</label>
+            <label class="pill"><input type="checkbox" id="obPregnant"/> ตั้งครรภ์/ให้นม (แนะนำปรึกษาแพทย์)</label>
+          </div>
+          <p class="small muted">ติ๊กเพื่อให้ระบบคุมความเข้มงวดของโปรโตคอลให้อนุรักษ์นิยม</p>
+        </div>
+      </div>
+
+      <div id="onbStep2" class="grid" style="display:none">
+        <div class="card"><div class="section-title">2/3 เป้าหมายและความชอบ</div>
+          <div class="row">
+            <div><label>เป้าหมายหลัก</label>
+              <select id="obGoal"><option value="learn">สร้างวินัย/เมตาบอลิซึม</option><option value="loss">ลดน้ำหนัก</option><option value="maintain">คุมน้ำหนัก</option></select>
+            </div>
+            <div><label>อัตราที่อยากเห็น</label>
+              <select id="obRate"><option value="0.25">ช้าและปลอดภัย ~0.25 กก./สัปดาห์</option><option value="0.5" selected>ปานกลาง ~0.5 กก./สัปดาห์</option><option value="0">ไม่ตั้งอัตรา</option></select>
+            </div>
+            <div><label>หน้าต่างกินที่ชอบ</label>
+              <select id="obWindow"><option value="early">เช้า-บ่าย (จบเร็ว)</option><option value="mid" selected>กลางวัน</option><option value="late">สาย-เย็น</option></select>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div><label>วันยืดหยุ่น (เลือกได้หลายวัน)</label>
+              <select id="obFlexDays" multiple size="4">
+                <option value="5">ศุกร์</option><option value="6">เสาร์</option><option value="0">อาทิตย์</option>
+              </select>
+            </div>
+            <div><label>หลีกเลี่ยงช่วงเวลา</label>
+              <select id="obAvoid"><option value="none">ไม่มี</option><option value="evening">เลี่ยงดึกหลัง 20:30</option><option value="morning">เลี่ยงเช้ามากก่อน 8:00</option></select>
+            </div>
+            <div style="flex:1; min-width:300px"><label>หมายเหตุส่วนตัว</label><input id="obNote" placeholder="เช่น ทำงานเป็นกะ พบนอกสถานที่บ่อย"/></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="onbStep3" class="grid" style="display:none">
+        <div class="card"><div class="section-title">3/3 แผนเริ่มต้นที่ระบบคำนวณ</div>
+          <div id="obPlanView"></div>
+          <p class="small muted">หลักคิด: เริ่มอนุรักษ์นิยม ปรับทีละขั้นตามสม่ำเสมอและแนวโน้มน้ำหนัก</p>
+        </div>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn" id="btnOnbPrev">ย้อนกลับ</button>
+      <button class="btn primary" id="btnOnbNext">ถัดไป</button>
+    </div>
+  </dialog>
+
+  <!-- Export/Import -->
+  <dialog id="dlgExport"><div class="dlg-head"><strong>ส่งออกข้อมูล</strong><button class="btn" onclick="dlgExport.close()">ปิด</button></div><div class="dlg-body"><p>ดาวน์โหลดไฟล์ <b>if-personal.json</b> สำหรับแบ็คอัพ/ย้ายเครื่อง</p></div><div class="dlg-foot"><button class="btn" onclick="dlgExport.close()">ยกเลิก</button><button class="btn primary" id="btnDoExport">ดาวน์โหลด</button></div></dialog>
+  <dialog id="dlgImport"><div class="dlg-head"><strong>นำเข้าข้อมูล</strong><button class="btn" onclick="dlgImport.close()">ปิด</button></div><div class="dlg-body"><input type="file" id="fileImport" accept="application/json"/><p class="small muted">รองรับไฟล์ที่ส่งออกจากแอพนี้เท่านั้น</p></div><div class="dlg-foot"><button class="btn" onclick="dlgImport.close()">ยกเลิก</button><button class="btn primary" id="btnDoImport">นำเข้า</button></div></dialog>
+
+  <!-- Quick rMEQ (optional) -->
+  <dialog id="dlgChrono"><div class="dlg-head"><strong>แบบทดสอบ Chronotype (rMEQ 5 ข้อ)</strong><button class="btn" onclick="dlgChrono.close()">ปิด</button></div>
+    <div class="dlg-body"><ol id="quizList" class="list" style="gap:14px"></ol><p class="small muted">อ้างอิง rMEQ (Adan & Almirall, 1991) ฉบับย่อ 5 ข้อ</p></div>
+    <div class="dlg-foot"><button class="btn" onclick="dlgChrono.close()">ยกเลิก</button><button class="btn primary" id="btnQuizSave">บันทึกคะแนน</button></div>
+  </dialog>
+
+  <script>
+  "use strict";
+  const $ = (s,el=document)=>el.querySelector(s); const $$=(s,el=document)=>Array.from(el.querySelectorAll(s));
+  const fmtTime = ms=>{const s=Math.max(0,Math.floor(ms/1000)); const hh=String(Math.floor(s/3600)).padStart(2,'0'); const mm=String(Math.floor((s%3600)/60)).padStart(2,'0'); const ss=String(s%60).padStart(2,'0'); return `${hh}:${mm}:${ss}`};
+  const fmtDate = d=>new Date(d).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'});
+  const todayISO = ()=> new Date().toISOString().slice(0,10);
+  // util เพิ่มเติม: เข้าถึง element และ escape HTML เพื่อกัน XSS
+  const el=(id)=>document.getElementById(id);
+  const esc=(s)=>{ if(s==null) return ''; return String(s).replace(/[&<>"']/g, c => c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':c==='"'?'&quot;':'&#39;'); };
+  // cache elements และ expose global สำหรับ inline handlers ใน markup
+  const dlgOnboard=el("dlgOnboard"), dlgExport=el("dlgExport"), dlgImport=el("dlgImport"), dlgChrono=el("dlgChrono");
+  const btnDoExport=el("btnDoExport"), btnDoImport=el("btnDoImport"), fileImport=el("fileImport");
+  window.dlgOnboard=dlgOnboard; window.dlgExport=dlgExport; window.dlgImport=dlgImport; window.dlgChrono=dlgChrono;
+  function beep(){ try{ const ctx=new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(); const g=ctx.createGain(); o.type='sine'; o.frequency.value=880; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.2,ctx.currentTime+.02); o.start(); setTimeout(()=>{ g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.02); o.stop(); ctx.close(); },240);}catch(e){} }
+
+  // ===== DB + Snapshots
+  const DB_KEY='if.personal.v2'; // คง key เดิมเพื่อไม่ให้ผู้ใช้สูญข้อมูล
+  const SNAP_KEY=DB_KEY+'.snaps';
+  const DEFAULTS={
+    profile:{ nickname:'', heightCm:null, rmeqScore:null, wake:'06:30', sleep:'23:00' },
+    plan:{ protocol:'16:8', fastingHrs:16, feedStart:'12:00', feedEnd:'20:00' },
+    goals:{ type:'learn', targetWeight:null, targetRate:0.5 },
+    prefs:{ window:'mid', flexDays:[6,0,5], avoid:'none', activity:'sedentary', experience:'beginner', note:'', safety:{ medical:false, underweight:false, pregnant:false } },
+    settings:{ theme:'system', focusMode:false },
+    meta:{ version:3, lastSnapshotISO:null, slips:0, recoveryUntil:null },
+    current:{ status:'idle', start:null, targetEnd:null, end:null },
+    history:[], weights:[]
+  };
+  function loadDB(){ try{ const raw=localStorage.getItem(DB_KEY); if(!raw) return structuredClone(DEFAULTS); const d=JSON.parse(raw); const merged=Object.assign(structuredClone(DEFAULTS), d); if(!merged.meta) merged.meta={version:3,lastSnapshotISO:null,slips:0,recoveryUntil:null}; if(!merged.settings) merged.settings={theme:'system',focusMode:false}; if(merged.settings.focusMode==null) merged.settings.focusMode=false; return merged; }catch(e){ return structuredClone(DEFAULTS);} }
+  function saveDB(d){ localStorage.setItem(DB_KEY, JSON.stringify(d)); }
+  let DB = loadDB();
+
+  // สถานะกราฟน้ำหนักแบบ interactive
+  const WCS={start:0,end:0,hover:-1,drag:false,dragX:0,dragRange:[0,0],showES:true,showLR:false};
+
+  function pushSnapshot(reason){ try{ const snaps=JSON.parse(localStorage.getItem(SNAP_KEY)||'[]'); snaps.unshift({dateISO:todayISO(), reason, db:DB}); while(snaps.length>12) snaps.pop(); localStorage.setItem(SNAP_KEY, JSON.stringify(snaps)); DB.meta.lastSnapshotISO=todayISO(); saveDB(DB); }catch(e){} }
+  function weeklySnapshotIfNeeded(){ const last=DB.meta.lastSnapshotISO; const now=todayISO(); if(!last){ pushSnapshot('first-run'); return; } const a=new Date(last), b=new Date(now); const diff=(b-a)/86400000; if(diff>=7) pushSnapshot('weekly'); }
+
+  // Theme
+  function applyTheme(){ const t=DB.settings?.theme||'system'; document.documentElement.dataset.theme=t; document.documentElement.style.colorScheme = t==='light' ? 'light' : t==='dark' ? 'dark' : 'light dark'; }
+  applyTheme();
+
+  // Tabs
+  const TABS=[ {id:'today',label:'วันนี้'}, {id:'coach',label:'โค้ช'}, {id:'schedule',label:'ตาราง'}, {id:'history',label:'สถิติ'}, {id:'weight',label:'น้ำหนัก'}, {id:'settings',label:'ตั้งค่า'}, {id:'help',label:'ช่วยเหลือ'} ];
+  function buildNav(){ const nav=$('#nav'); nav.innerHTML=''; TABS.forEach(t=>{ const b=document.createElement('button'); b.className='tab'; b.textContent=t.label; b.setAttribute('role','tab'); b.dataset.tab=t.id; b.onclick=()=>goto(t.id); nav.appendChild(b);}); const hash=location.hash.slice(1)||'today'; goto(hash);} 
+  function setSelected(id){ $$('#nav .tab').forEach(b=> b.setAttribute('aria-selected', b.dataset.tab===id)); }
+  function goto(id){ location.hash=id; setSelected(id); render(id); }
+
+  // Toast
+  function toast(msg,ms=1600){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),ms); }
+
+  // Focus mode: Wake Lock + Notifications + Vibration milestones
+  let wakeLockSentinel=null; let milestonesHit=new Set();
+  async function enableFocus(){ if(DB.settings.focusMode) return; DB.settings.focusMode=true; saveDB(DB); if('wakeLock' in navigator){ try{ wakeLockSentinel=await navigator.wakeLock.request('screen'); }catch(e){} } if('Notification' in window){ try{ if(Notification.permission==='default') await Notification.requestPermission(); }catch(e){} } toast('เปิดโหมดโฟกัส'); render('today'); }
+  function disableFocus(){ DB.settings.focusMode=false; saveDB(DB); if(wakeLockSentinel){ try{ wakeLockSentinel.release(); }catch(e){} wakeLockSentinel=null; } toast('ปิดโหมดโฟกัส'); render('today'); }
+  document.addEventListener('visibilitychange', async()=>{ if(document.visibilityState==='visible' && DB.settings.focusMode && 'wakeLock' in navigator){ try{ if(!wakeLockSentinel) wakeLockSentinel=await navigator.wakeLock.request('screen'); }catch(e){} } });
+  function notify(title, body){ if('Notification' in window && Notification.permission==='granted'){ try{ new Notification(title,{body}); }catch(e){} } }
+  function vibratePulse(){ if(navigator.vibrate) try{ navigator.vibrate([80,40,80]); }catch(e){} }
+  function checkMilestonesPct(pct){ if(!DB.settings.focusMode) return; [25,50,75,100].forEach(m=>{ if(pct>=m && !milestonesHit.has(m)){ milestonesHit.add(m); vibratePulse(); if(m===100) notify('ครบเวลา', 'ถึงเป้าหมายแล้ว'); } }); }
+
+  // Timer
+  let tickHandle=null; function now(){ return Date.now(); }
+  function startTick(){ stopTick(); tickHandle=setInterval(()=>{ if(location.hash.slice(1)==='today') render('today'); },1000); }
+  function stopTick(){ if(tickHandle){ clearInterval(tickHandle); tickHandle=null; } }
+  function startFast(){ if(DB.current.status==='fasting') return; const start=now(); const targetEnd=start+DB.plan.fastingHrs*3600_000; DB.current={status:'fasting', start, targetEnd, end:null}; milestonesHit.clear(); saveDB(DB); toast('เริ่มอดอาหาร'); notify('เริ่มอดอาหาร', `เป้าหมาย ${DB.plan.fastingHrs} ชม.`); startTick(); render('today'); }
+  function applySlip(auto){ DB.meta.slips=(DB.meta.slips||0)+1; const newHrs=Math.max(12, DB.plan.fastingHrs-2); DB.plan.fastingHrs=newHrs; DB.plan.protocol=newHrs+':'+(24-newHrs); const ch=chronoRecommendation(newHrs); DB.plan.feedStart=ch.start; DB.plan.feedEnd=ch.end; const until=new Date(); until.setDate(until.getDate()+2); DB.meta.recoveryUntil=until.toISOString(); saveDB(DB); pushSnapshot('slip'); toast(auto? 'ปรับแผนฟื้นตัวอัตโนมัติ 48 ชม.' : 'ตั้งโหมดฟื้นตัว 48 ชม.'); render('coach'); }
+  function endFast(){ if(DB.current.status!=='fasting') return; const end=now(); const start=DB.current.start; const durationHrs=Math.max(0,(end-start)/3600_000); const target=DB.plan.fastingHrs; DB.history.unshift({start,end,durationHrs}); DB.current={status:'idle',start:null,targetEnd:null,end:null}; saveDB(DB); toast('สิ้นสุดการอดอาหาร'); notify('สิ้นสุดการอดอาหาร', `ทำได้ ${durationHrs.toFixed(2)} ชม.`); if(durationHrs < 0.6*target){ applySlip(true); } else { if(DB.meta.recoveryUntil && new Date() > new Date(DB.meta.recoveryUntil)){ DB.meta.recoveryUntil=null; saveDB(DB); } }
+    weeklySnapshotIfNeeded(); render('today'); render('history'); render('coach'); }
+  function checkAutoComplete(){ if(DB.current.status==='fasting' && now()>=DB.current.targetEnd){ beep(); endFast(); toast('ครบเวลาตามเป้า'); } }
+  setInterval(checkAutoComplete,1000);
+
+  // ==== Stats helpers
+  function calcStats(){ const arr=DB.history; const n=arr.length; if(n===0) return {avg:0,max:0,last7Avg:0,streak:0}; const avg=arr.reduce((a,b)=>a+b.durationHrs,0)/n; const max=Math.max(...arr.map(x=>x.durationHrs)); const last7=arr.slice(0,7); const last7Avg=last7.length? last7.reduce((a,b)=>a+b.durationHrs,0)/last7.length:0; const byDay=new Map(); arr.forEach(h=>{ const d=new Date(h.end||h.start); const iso=d.toISOString().slice(0,10); byDay.set(iso, Math.max(byDay.get(iso)||0, h.durationHrs)); }); let streak=0; let d=new Date(); for(;;){ const iso=d.toISOString().slice(0,10); const ok=(byDay.get(iso)||0)>=DB.plan.fastingHrs-0.25; if(ok){ streak++; d.setDate(d.getDate()-1);} else break; } return {avg,max,last7Avg,streak}; }
+  function weightLatest(){ if(!DB.weights.length) return null; return DB.weights[DB.weights.length-1]; }
+  function bmi(){ const h=DB.profile.heightCm; const w=weightLatest()?.weight ?? parseFloat($('#obWeight')?.value||''); if(!h||!w) return null; const m=h/100; return w/(m*m); }
+  function linearRegression(pts){ const n=pts.length; if(n<2) return {slope:0,intercept:pts[0]?pts[0].y:0}; let sumx=0,sumy=0,sumxy=0,sumxx=0; for(const p of pts){ sumx+=p.x; sumy+=p.y; sumxy+=p.x*p.y; sumxx+=p.x*p.x; } const slope=(n*sumxy - sumx*sumy)/(n*sumxx - sumx*sumx || 1); const intercept=(sumy - slope*sumx)/n; return {slope,intercept}; }
+  function weightTrendLR(days=21){ if(DB.weights.length<2) return {slope:0,perWeek:0}; const cut=new Date(); cut.setDate(cut.getDate()-days); const arr=DB.weights.filter(w=> new Date(w.dateISO)>=cut); if(arr.length<2) return {slope:0,perWeek:0}; const base=new Date(arr[0].dateISO).getTime(); const pts=arr.map(w=>({x:(new Date(w.dateISO).getTime()-base)/86400000, y:w.weight})); const {slope}=linearRegression(pts); return {slope, perWeek:slope*7}; }
+  function expSmoothTrend(alpha=0.3, days=21){ const cut=new Date(Date.now()-days*86400000); const arr=DB.weights.filter(w=> new Date(w.dateISO)>=cut); if(arr.length<2) return {perWeek:0}; let s=arr[0].weight; const S=[s]; for(let i=1;i<arr.length;i++){ s = alpha*arr[i].weight + (1-alpha)*s; S.push(s); } const k=Math.min(7, S.length-1); const perDay=(S[S.length-1]-S[S.length-1-k])/k; return {perWeek: perDay*7}; }
+  function adherence(days=14){ const cut=new Date(); cut.setDate(cut.getDate()-days); const byDay=new Map(); DB.history.forEach(h=>{ const d=new Date(h.end||h.start); if(d>=cut){ const iso=d.toISOString().slice(0,10); byDay.set(iso, Math.max(byDay.get(iso)||0, h.durationHrs)); }}); let yes=0,total=0; for(let i=0;i<days;i++){ const d=new Date(); d.setDate(d.getDate()-i); const iso=d.toISOString().slice(0,10); const ok=(byDay.get(iso)||0) >= DB.plan.fastingHrs - 0.25; if(byDay.has(iso)) total++; if(ok) yes++; } return total? yes/total : 0; }
+
+  // ==== Chrono and Coach
+  function chronoRecommendation(baseHrs){ const score=DB.profile.rmeqScore; const wake=DB.profile.wake||'06:30'; const sleep=DB.profile.sleep||'23:00'; const [wh,wm]=wake.split(':').map(Number); const [sh,sm]=sleep.split(':').map(Number); const wakeMin=wh*60+wm; const sleepMin=sh*60+sm; const feedSpan=Math.max(8*60, 24*60 - baseHrs*60); let startMin = wakeMin + 90; if(DB.prefs?.window==='early') startMin = wakeMin + 60; if(DB.prefs?.window==='late') startMin = wakeMin + 180; if(score!=null){ if(score>=18) startMin = Math.min(startMin, wakeMin+60); if(score<=11) startMin = Math.max(startMin, wakeMin+120); }
+    let endMin=startMin+feedSpan; const guard=(sleepMin - 210); if(endMin>guard){ endMin=guard; startMin=endMin-feedSpan; }
+    const hh=m=> String(Math.floor((m+1440)%1440/60)).padStart(2,'0'); const mm=m=> String(((m+1440)%1440)%60).padStart(2,'0'); return { start:`${hh(startMin)}:${mm(startMin)}`, end:`${hh(endMin)}:${mm(endMin)}` };
+  }
+
+  function coachSuggest(){ const adh=adherence(14); const wt=expSmoothTrend(0.35,21); const imc=bmi(); const hrs=DB.plan.fastingHrs; let recHrs=hrs; let reason=[]; let flags=[];
+    if(imc!=null && imc<18.5){ recHrs=Math.min(hrs,14); flags.push('BMI ต่ำ: จำกัดเป้าสูงสุด 14 ชม.'); }
+    if(DB.prefs?.safety?.medical || DB.prefs?.safety?.pregnant){ recHrs=Math.min(recHrs,14); flags.push('ภาวะที่ต้องระวัง: จำกัดเป้า 12–14 ชม. และปรึกษาแพทย์'); }
+    if(adh>=0.8 && wt.perWeek<=-0.2){ recHrs=Math.min(hrs+1,20); reason.push('สม่ำเสมอสูงและน้ำหนักลดต่อเนื่อง'); }
+    else if(adh>=0.8 && Math.abs(wt.perWeek)<0.1){ recHrs=Math.min(hrs+2,20); reason.push('ชะงัก ≥3 สัปดาห์ เพิ่มครั้งละ 2 ชม.'); }
+    else if(adh<0.6){ recHrs=Math.max(hrs-2,12); reason.push('สม่ำเสมอต่ำ ลดชั่วโมงเพื่อทำต่อเนื่อง'); }
+    const s=calcStats(); if(s.last7Avg>hrs+1.5){ reason.push('อดนานจริงเกินเป้า ตั้งเป้าใหม่ให้ใกล้พฤติกรรมจริง'); recHrs=Math.min(Math.round(s.last7Avg),20); }
+    const tr = DB.goals?.targetRate || 0; if(tr>0){ const lr=weightTrendLR(21).perWeek; const delta = (-lr) - tr; if(delta < -0.15) { recHrs=Math.min(recHrs+1,20); reason.push('ความเร็วลดน้ำหนักต่ำกว่าเป้า เพิ่มอีก 1 ชม.'); } if(delta > 0.25){ recHrs=Math.max(recHrs-1,12); reason.push('ลดเร็วกว่าที่ตั้งไว้ ลดชั่วโมงเพื่อความยั่งยืน'); } }
+    const chrono = chronoRecommendation(recHrs);
+    return { recHrs, reason, flags, adh, wtPerWeek: wt.perWeek, chrono };
+  }
+
+  // Monte-Carlo forecast via Web Worker
+  let mcWorkerURL=null;
+  function runForecast(sims=3000){ return new Promise((resolve,reject)=>{ const code=`self.onmessage=function(e){const {weights,target,sims}=e.data;const arr=weights.slice().sort((a,b)=>a.dateISO.localeCompare(b.dateISO));if(!arr.length||!target){self.postMessage(null);return;}const deltas=[];for(let i=1;i<arr.length;i++){deltas.push(arr[i].weight-arr[i-1].weight)}const mean=deltas.length?deltas.reduce((a,b)=>a+b,0)/deltas.length:0;const variance=deltas.length?deltas.reduce((a,b)=>a+(b-mean)*(b-mean),0)/deltas.length:0.04;const sd=Math.sqrt(variance);function rndNorm(){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}const last=arr[arr.length-1];const results=[];for(let s=0;s<sims;s++){let w=last.weight;let d=0;for(;d<365;d++){w+=mean+sd*rndNorm();if(target < last.weight ? w<=target : w>=target){results.push(d);break}}if(d>=365)results.push(365)}results.sort((a,b)=>a-b);function q(p){const idx=Math.floor(p*(results.length-1));return results[idx]}self.postMessage({d10:q(0.1),d50:q(0.5),d90:q(0.9)})};`;
+    if(!mcWorkerURL){ const blob=new Blob([code],{type:'text/javascript'}); mcWorkerURL=URL.createObjectURL(blob); }
+    const w=new Worker(mcWorkerURL); w.onmessage=(ev)=>{ w.terminate(); resolve(ev.data); }; w.onerror=(e)=>{ w.terminate(); reject(e.message); }; w.postMessage({weights:DB.weights, target:DB.goals.targetWeight, sims}); }); }
+
+  // ==== Views
+  function render(tab){ const v=$('#view'); v.innerHTML=''; if(tab==='today') return renderToday(v); if(tab==='coach') return renderCoach(v); if(tab==='schedule') return renderSchedule(v); if(tab==='history') return renderHistory(v); if(tab==='weight') return renderWeight(v); if(tab==='settings') return renderSettings(v); if(tab==='help') return renderHelp(v); }
+
+  function renderToday(v){ const isF=DB.current.status==='fasting'; const total=DB.plan.fastingHrs*3600_000; const elapsed=isF?Math.max(0,now()-DB.current.start):0; const left=isF?Math.max(0, DB.current.targetEnd-now()):total; const pct=isF?Math.min(100,Math.round((elapsed/total)*100)):0; const wrap=document.createElement('div'); wrap.className='grid';
+    const ring=document.createElement('div'); ring.className='card half'; ring.innerHTML=`<div class="ring" style="--size:260px"><svg viewBox="0 0 120 120" width="100%" height="100%" aria-hidden="true"><circle cx="60" cy="60" r="54" stroke="var(--ring)" stroke-width="10" fill="none"/><circle cx="60" cy="60" r="54" stroke="url(#grad)" stroke-linecap="round" stroke-width="10" fill="none" stroke-dasharray="${Math.PI*2*54}" stroke-dashoffset="${(1-pct/100)*Math.PI*2*54}" transform="rotate(-90 60 60)"/><defs><linearGradient id="grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="var(--accent)"/><stop offset="100%" stop-color="var(--accent2)"/></linearGradient></defs></svg><div class="value"><div class="small muted">ความคืบหน้า</div><div style="font-size:36px;font-weight:800">${pct}%</div><div class="small muted">เป้าหมาย ${DB.plan.fastingHrs} ชม.</div></div></div>`;
+    const info=document.createElement('div'); info.className='card half'; const inRecovery = DB.meta.recoveryUntil && new Date(DB.meta.recoveryUntil) > new Date(); info.innerHTML=`<div class="row"><div class="pill">⌛ ${isF?'กำลังอดอาหาร':'ยังไม่เริ่ม'}</div><div class="pill">⏱️ เป้า ${DB.plan.fastingHrs} ชม.</div><div class="pill ${inRecovery?'warn':''}">${inRecovery? '🩹 โหมดฟื้นตัวถึง '+ new Date(DB.meta.recoveryUntil).toLocaleDateString() : 'ปกติ'}</div><button class="pill right" id="focusToggle">${DB.settings.focusMode?'🔒 โหมดโฟกัส: เปิด':'🔓 โหมดโฟกัส: ปิด'}</button></div>
+      <div class="grid" style="margin-top:14px"><div class="card third"><div class="section-title">เริ่ม</div><div>${isF?fmtDate(DB.current.start):'-'}</div></div><div class="card third"><div class="section-title">คงเหลือ</div><div style="font-size:24px;font-variant-numeric:tabular-nums">${fmtTime(left)}</div></div><div class="card third"><div class="section-title">สิ้นสุดตามเป้า</div><div>${isF?fmtDate(DB.current.targetEnd):'-'}</div></div></div>
+      <div class="row" style="margin-top:12px;gap:8px">${isF?`<button class="btn ok" id="btnEnd">สิ้นสุดตอนนี้</button><button class="btn" id="btnAdd30">+ เพิ่มเป้า 30 นาที</button>`:`<button class="btn primary" id="btnStart">เริ่มอดอาหารตอนนี้</button>`}<button class="btn" id="btnQuick14">เป้า 14 ชม.</button><button class="btn" id="btnQuick16">เป้า 16 ชม.</button><button class="btn" id="btnQuick18">เป้า 18 ชม.</button><button class="btn warn" id="btnSlip">พลาดวันนี้</button></div>
+      <div style="margin-top:16px"><div class="section-title">บันทึกล่าสุด</div><div class="list" id="recentList"></div></div>`;
+    wrap.appendChild(ring); wrap.appendChild(info); v.appendChild(wrap);
+    checkMilestonesPct(pct);
+    const recent=DB.history.slice(0,5); const list=$('#recentList'); list.innerHTML = recent.length? '' : `<div class="muted small">ยังไม่มีข้อมูล</div>`; recent.forEach(h=>{ const it=document.createElement('div'); it.className='item'; it.innerHTML=`<div>🗓️ ${fmtDate(h.start)} → ${fmtDate(h.end)}</div><div class="pill">${h.durationHrs.toFixed(2)} ชม.</div>`; list.appendChild(it); });
+    $('#btnQuick14').onclick=()=>{ DB.plan.fastingHrs=14; DB.plan.protocol='14:10'; saveDB(DB); toast('ตั้งเป้า 14 ชม.'); render('today'); };
+    $('#btnQuick16').onclick=()=>{ DB.plan.fastingHrs=16; DB.plan.protocol='16:8'; saveDB(DB); toast('ตั้งเป้า 16 ชม.'); render('today'); };
+    $('#btnQuick18').onclick=()=>{ DB.plan.fastingHrs=18; DB.plan.protocol='18:6'; saveDB(DB); toast('ตั้งเป้า 18 ชม.'); render('today'); };
+    $('#btnSlip').onclick=()=>applySlip(false);
+    $('#focusToggle').onclick=()=> DB.settings.focusMode? disableFocus(): enableFocus();
+    if(isF){ $('#btnEnd').onclick=endFast; $('#btnAdd30').onclick=()=>{ DB.current.targetEnd += 30*60*1000; saveDB(DB); toast('เพิ่มเวลา 30 นาที'); render('today'); }; } else { $('#btnStart').onclick=startFast; }
+  }
+
+  function renderSchedule(v){ const card=document.createElement('div'); card.className='card'; card.innerHTML=`<div class="row" style="justify-content:space-between"><div><div class="section-title">โปรโตคอล</div><div class="row"><select id="selPlan"><option value="14">14:10</option><option value="16">16:8</option><option value="18">18:6</option><option value="20">20:4 (OMAD)</option></select><input type="number" id="inpCustomHrs" min="10" max="48" placeholder="กำหนดเอง" style="width:120px"/><button class="btn" id="btnApplyPlan">บันทึก</button></div></div><div><div class="section-title">ตัวช่วย</div><div class="row"><label class="pill"><input type="checkbox" id="chkAutoStart"/> เริ่มอัตโนมัติทุกวัน</label><input type="time" id="inpAutoTime" value="20:00"/><button class="btn" id="btnStartNow">เริ่มตอนนี้</button></div></div></div><div style="margin-top:14px"><div class="section-title">แผนรายสัปดาห์</div><div class="list" id="weekList"></div></div>`; v.appendChild(card);
+    $('#selPlan').value=String(DB.plan.fastingHrs); $('#inpCustomHrs').value=''; $('#btnApplyPlan').onclick=()=>{ const custom=parseFloat($('#inpCustomHrs').value); const hrs = isFinite(custom)&&custom>0? custom : parseInt($('#selPlan').value,10); DB.plan.fastingHrs=Math.max(10,Math.min(48,hrs)); DB.plan.protocol=DB.plan.fastingHrs+':'+(24-DB.plan.fastingHrs); const chrono=chronoRecommendation(DB.plan.fastingHrs); DB.plan.feedStart=chrono.start; DB.plan.feedEnd=chrono.end; saveDB(DB); toast('อัปเดตโปรโตคอล'); render('today'); render('coach'); };
+    $('#btnStartNow').onclick=startFast;
+    const days=['จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์','อาทิตย์']; const list=$('#weekList'); list.innerHTML=''; days.forEach((d,i)=>{ const row=document.createElement('div'); row.className='item'; const flex=DB.prefs.flexDays.includes((i+1)%7); row.innerHTML=`<div>${d}</div><div class="row"><span class="pill">เป้า ${DB.plan.fastingHrs} ชม.</span><span class="pill muted">กิน ${DB.plan.feedStart}–${DB.plan.feedEnd}${flex?' • ยืดหยุ่น':''}</span></div>`; list.appendChild(row); }); $('#chkAutoStart').checked = sessionStorage.getItem('if.auto')==='1'; $('#chkAutoStart').onchange=e=>{ if(e.target.checked) sessionStorage.setItem('if.auto','1'); else sessionStorage.removeItem('if.auto'); };
+  }
+
+  function renderHistory(v){ const wrap=document.createElement('div'); wrap.className='grid'; const s=calcStats(); const sCard=document.createElement('div'); sCard.className='card'; sCard.innerHTML=`<div class="row" style="gap:10px"><div class="pill">🔥 สตรีค: ${s.streak} วัน</div><div class="pill">⏳ ค่าเฉลี่ย: ${s.avg.toFixed(2)} ชม.</div><div class="pill">🏆 ยาวสุด: ${s.max.toFixed(2)} ชม.</div><div class="pill">📈 7 วันล่าสุด: ${s.last7Avg.toFixed(2)} ชม.</div><div class="right pill muted">รวมทั้งหมด ${DB.history.length} ครั้ง</div></div>`; const tCard=document.createElement('div'); tCard.className='card'; const table=document.createElement('table'); table.innerHTML=`<thead><tr><th>วันที่</th><th>เริ่ม</th><th>สิ้นสุด</th><th>ชั่วโมง</th></tr></thead><tbody id="histBody"></tbody>`; tCard.appendChild(table); wrap.appendChild(sCard); wrap.appendChild(tCard); v.appendChild(wrap); const body=$('#histBody'); body.innerHTML=''; DB.history.slice(0,200).forEach(h=>{ const tr=document.createElement('tr'); const d=new Date(h.start); tr.innerHTML=`<td>${d.toLocaleDateString()}</td><td>${new Date(h.start).toLocaleTimeString()}</td><td>${new Date(h.end).toLocaleTimeString()}</td><td>${h.durationHrs.toFixed(2)}</td>`; body.appendChild(tr); }); }
+
+  function renderWeight(v){ const wrap=document.createElement('div'); wrap.className='grid';
+    const form=document.createElement('div'); form.className='card half'; form.innerHTML=`<div class="row"><div><label>วันที่</label><input type="date" id="wDate" value="${todayISO()}"/></div><div><label>น้ำหนัก (กก.)</label><input type="number" id="wVal" step="0.1" placeholder="เช่น 72.4"/></div><div class="row" style="align-self:flex-end;gap:8px"><button class="btn" id="wAdd">เพิ่ม</button><button class="btn bad" id="wClear">ล้างข้อมูลทั้งหมด</button></div></div><p class="small muted">บันทึกอย่างน้อยสัปดาห์ละ 2–3 ครั้งเพื่อเห็นแนวโน้ม</p>`;
+    const chartCard=document.createElement('div'); chartCard.className='card half'; chartCard.style.position='relative'; chartCard.innerHTML=`<div style="position:relative"><canvas id="weightChart" height="240" style="width:100%"></canvas><div id="wTip" class="pill" style="position:absolute;display:none;pointer-events:none"></div></div><div class="progressbar" style="margin-top:10px"><div id="trendBar"></div></div><div class="row" style="gap:8px;margin-top:10px"><button class="btn" id="wReset">รีเซ็ตซูม</button><label class="pill"><input type="checkbox" id="wES" checked/> ES overlay</label><label class="pill"><input type="checkbox" id="wLR"/> เส้นแนวโน้ม</label><span class="muted small">เลื่อนล้อเมาส์เพื่อซูม • ลากเพื่อเลื่อน</span></div>`;
+    const tableCard=document.createElement('div'); tableCard.className='card'; tableCard.innerHTML=`<table><thead><tr><th>วันที่</th><th>น้ำหนัก (กก.)</th><th></th></tr></thead><tbody id="wBody"></tbody></table>`;
+    wrap.appendChild(form); wrap.appendChild(chartCard); wrap.appendChild(tableCard); v.appendChild(wrap);
+    $('#wAdd').onclick=()=>{ const d=$('#wDate').value; const val=parseFloat($('#wVal').value); if(!d||!isFinite(val)) return toast('กรอกข้อมูลให้ครบ'); DB.weights.push({dateISO:d, weight:val}); DB.weights.sort((a,b)=>a.dateISO.localeCompare(b.dateISO)); saveDB(DB); toast('บันทึกน้ำหนักแล้ว'); if(DB.weights.length===1){ WCS.start=0; WCS.end=0; } else { WCS.end=DB.weights.length-1; if(WCS.start>WCS.end) WCS.start=0; } drawWeightChart(); render('coach'); weeklySnapshotIfNeeded(); };
+    $('#wClear').onclick=()=>{ if(confirm('ล้างข้อมูลน้ำหนักทั้งหมด?')){ DB.weights=[]; saveDB(DB); WCS.start=0; WCS.end=0; drawWeightChart(); render('coach'); } };
+    const body=$('#wBody'); body.innerHTML=''; DB.weights.slice().reverse().forEach((w,idx)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${esc(w.dateISO)}</td><td>${w.weight.toFixed(1)}</td><td><button class="btn bad" data-index="${DB.weights.length-1-idx}">ลบ</button></td>`; body.appendChild(tr); }); body.querySelectorAll('button').forEach(b=> b.onclick=()=>{ const i=parseInt(b.dataset.index,10); DB.weights.splice(i,1); saveDB(DB); if(DB.weights.length){ WCS.start=0; WCS.end=DB.weights.length-1; } else { WCS.start=0; WCS.end=0; } drawWeightChart(); render('coach'); });
+    if(DB.weights.length){ if(!(WCS.end>=WCS.start && WCS.end<DB.weights.length)){ WCS.start=0; WCS.end=DB.weights.length-1; } } else { WCS.start=0; WCS.end=0; }
+    drawWeightChart(); addWeightChartInteractions();
+    $('#wES').checked=WCS.showES; $('#wLR').checked=WCS.showLR; $('#wES').onchange=e=>{ WCS.showES=e.target.checked; drawWeightChart(); }; $('#wLR').onchange=e=>{ WCS.showLR=e.target.checked; drawWeightChart(); }; $('#wReset').onclick=()=>{ if(DB.weights.length){ WCS.start=0; WCS.end=DB.weights.length-1; WCS.hover=-1; drawWeightChart(); } };
+  }
+
+  function drawWeightChart(){ const c=$('#weightChart'); if(!c) return; const tip=$('#wTip'); const ctx=c.getContext('2d'); const dp=devicePixelRatio||1; const W=c.width=c.getBoundingClientRect().width*dp; const H=c.height=240*dp; ctx.clearRect(0,0,W,H); ctx.font=`${12*dp}px system-ui`; const textColor=getComputedStyle(document.documentElement).getPropertyValue('--text'); const ringColor=getComputedStyle(document.documentElement).getPropertyValue('--ring'); const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent'); const accent2=getComputedStyle(document.documentElement).getPropertyValue('--accent2');
+    const n=DB.weights.length; if(n===0){ ctx.fillStyle=textColor; ctx.fillText('ยังไม่มีข้อมูล', 10*dp, 20*dp); if(tip) tip.style.display='none'; $('#trendBar').style.width='0%'; return; }
+    // visible window
+    const start=Math.max(0, Math.min(WCS.start, n-1)); const end=Math.max(start, Math.min(WCS.end||n-1, n-1)); const vis=DB.weights.slice(start,end+1); const left=40*dp, right=20*dp, top=10*dp, bottom=24*dp; const innerW=W-left-right, innerH=H-top-bottom;
+    const ws=vis.map(d=>d.weight); const wmin=Math.min(...ws); const wmax=Math.max(...ws); const min=wmin*0.98, max=wmax*1.02; const y=w=> top + (1-((w-min)/(max-min||1)))*innerH; const x=i=> left + (i)*(innerW/Math.max(1, vis.length-1));
+    // grid
+    ctx.strokeStyle=ringColor; ctx.lineWidth=1; ctx.beginPath(); for(let i=0;i<5;i++){ const yy=top + i*(innerH/4); ctx.moveTo(left,yy); ctx.lineTo(W-right,yy);} ctx.stroke();
+    // y labels
+    ctx.fillStyle=textColor; ctx.textAlign='right'; ctx.textBaseline='middle'; for(let i=0;i<5;i++){ const val=min + i*(max-min)/4; const yy=top + (4-i)*(innerH/4); ctx.fillText(val.toFixed(1), left-6*dp, yy); }
+    // x labels (approx 4 ticks)
+    ctx.textAlign='center'; ctx.textBaseline='top'; const ticks=Math.min(4, vis.length); for(let t=0;t<ticks;t++){ const i=Math.round(t*(vis.length-1)/(ticks-1||1)); const xx=x(i); const lbl=vis[i].dateISO; ctx.fillText(lbl, xx, H-bottom+6*dp); }
+    // main line
+    ctx.lineWidth=3*dp; const grad=ctx.createLinearGradient(0,0,W,H); grad.addColorStop(0, accent); grad.addColorStop(1, accent2); ctx.strokeStyle=grad; ctx.beginPath(); vis.forEach((d,i)=>{ const xx=x(i), yy=y(d.weight); if(i===0) ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy); }); ctx.stroke();
+    // points
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--surface'); vis.forEach((d,i)=>{ const xx=x(i), yy=y(d.weight); ctx.beginPath(); ctx.arc(xx,yy,4*dp,0,Math.PI*2); ctx.fill(); });
+    // ES overlay
+    if(WCS.showES && vis.length>=2){ let s=vis[0].weight; const alpha=0.35; ctx.save(); ctx.setLineDash([6*dp,4*dp]); ctx.strokeStyle=textColor; ctx.lineWidth=2*dp; ctx.beginPath(); for(let i=0;i<vis.length;i++){ s = i===0? s : alpha*vis[i].weight + (1-alpha)*s; const xx=x(i), yy=y(s); if(i===0) ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy); } ctx.stroke(); ctx.restore(); }
+    // LR overlay
+    if(WCS.showLR && vis.length>=2){ const pts=vis.map((w,i)=>({x:i,y:w.weight})); const lr=(()=>{ const n=pts.length; let sumx=0,sumy=0,sumxy=0,sumxx=0; for(const p of pts){ sumx+=p.x; sumy+=p.y; sumxy+=p.x*p.y; sumxx+=p.x*p.x; } const slope=(n*sumxy - sumx*sumy)/(n*sumxx - sumx*sumx || 1); const intercept=(sumy - slope*sumx)/n; return {slope,intercept}; })(); const y0=lr.intercept; const y1=lr.intercept + lr.slope*(vis.length-1); ctx.save(); ctx.setLineDash([2*dp,3*dp]); ctx.strokeStyle=accent; ctx.lineWidth=2*dp; ctx.beginPath(); ctx.moveTo(x(0), y(y0)); ctx.lineTo(x(vis.length-1), y(y1)); ctx.stroke(); ctx.restore(); }
+    // hover guideline + tooltip
+    if(WCS.hover>=start && WCS.hover<=end){ const hi=WCS.hover-start; const d=vis[hi]; const xx=x(hi), yy=y(d.weight); ctx.save(); ctx.strokeStyle=accent2; ctx.lineWidth=1*dp; ctx.beginPath(); ctx.moveTo(xx, top); ctx.lineTo(xx, H-bottom); ctx.stroke(); ctx.restore(); ctx.beginPath(); ctx.fillStyle=accent2; ctx.arc(xx,yy,5*dp,0,Math.PI*2); ctx.fill(); if(tip){ tip.style.display='inline-flex'; tip.textContent=`${d.dateISO} • ${d.weight.toFixed(1)} กก.`; const rect=c.getBoundingClientRect(); const tx = Math.min(rect.width-10, Math.max(10, xx/dp + 8)); const ty = Math.min(rect.height-10, Math.max(10, yy/dp - 30)); tip.style.left=tx+'px'; tip.style.top=ty+'px'; } } else if(tip){ tip.style.display='none'; }
+    // progress bar
+    const first=DB.weights[0]?.weight, last=DB.weights[DB.weights.length-1]?.weight; if(first!=null && last!=null){ const change=(first-last); const pct=Math.min(100, Math.max(0, (Math.abs(change)/Math.max(0.1, first))*100)); $('#trendBar').style.width=`${pct.toFixed(0)}%`; }
+  }
+
+  function addWeightChartInteractions(){ const c=$('#weightChart'); if(!c || c.dataset.int==='1') return; c.dataset.int='1'; const dp=()=>devicePixelRatio||1; const LEFT=()=>40*dp(), RIGHT=()=>20*dp(), TOP=()=>10*dp(), BOTTOM=()=>24*dp();
+    c.addEventListener('wheel',(e)=>{ e.preventDefault(); const n=DB.weights.length; if(n<2) return; const rect=c.getBoundingClientRect(); const dpr=dp(); const x=(e.clientX-rect.left)*dpr; const innerW=c.width-LEFT()-RIGHT(); const r=Math.min(1,Math.max(0,(x-LEFT())/innerW)); const start=WCS.start; const end=WCS.end||n-1; const visCount=Math.max(2, end-start+1); const factor = e.deltaY>0? 1.2 : 0.8; let newCount=Math.round(visCount*factor); newCount=Math.max(5, Math.min(n, newCount)); const idx=Math.round(start + r*(visCount-1)); let newStart=Math.round(idx - r*(newCount-1)); newStart=Math.max(0, Math.min(n-newCount, newStart)); WCS.start=newStart; WCS.end=newStart+newCount-1; drawWeightChart(); });
+    c.addEventListener('mousedown',(e)=>{ WCS.drag=true; WCS.dragX=e.clientX; WCS.dragRange=[WCS.start,WCS.end]; });
+    window.addEventListener('mouseup',()=>{ WCS.drag=false; });
+    window.addEventListener('mousemove',(e)=>{ if(!c.isConnected) return; const rect=c.getBoundingClientRect(); const dpr=dp(); const x=(e.clientX-rect.left)*dpr; const innerW=c.width-LEFT()-RIGHT(); if(e.buttons===0) WCS.drag=false; if(WCS.drag){ const dx=e.clientX - WCS.dragX; const visCount=WCS.dragRange[1]-WCS.dragRange[0]+1; const shift=Math.round(dx*dpr/innerW * (visCount-1)); let ns=WCS.dragRange[0]-shift; ns=Math.max(0, Math.min(DB.weights.length-visCount, ns)); WCS.start=ns; WCS.end=ns+visCount-1; drawWeightChart(); return; } const start=WCS.start, end=WCS.end||DB.weights.length-1; const visCount=Math.max(1, end-start+1); const r=Math.min(1,Math.max(0,(x-LEFT())/innerW)); const idx=Math.round(start + r*(visCount-1)); WCS.hover=Math.max(0, Math.min(DB.weights.length-1, idx)); drawWeightChart(); });
+    c.addEventListener('mouseleave',()=>{ WCS.hover=-1; const tip=$('#wTip'); if(tip) tip.style.display='none'; drawWeightChart(); });
+  }
+
+  function renderSettings(v){ const card=document.createElement('div'); card.className='grid'; const a=document.createElement('div'); a.className='card half'; a.innerHTML=`<div class="section-title">ทั่วไป</div><div class="row"><div><label>ชื่อเล่น</label><input id="sNickname" value="${DB.profile.nickname||''}" placeholder="เช่น HJ"/></div><div><label>ส่วนสูง (ซม.)</label><input type="number" id="sHeight" min="120" max="240" value="${DB.profile.heightCm||''}"/></div><div><label>ธีม</label><select id="sTheme"><option value="system">ระบบ</option><option value="light">สว่าง</option><option value="dark">มืด</option></select></div></div><div class="row" style="margin-top:12px;gap:8px"><button class="btn primary" id="sSave">บันทึก</button><button class="btn" id="btnExport">ส่งออก JSON</button><button class="btn" id="btnImport">นำเข้า JSON</button><button class="btn bad right" id="btnReset">ล้างค่าโรงงาน</button></div>`;
+    const b=document.createElement('div'); b.className='card half'; b.innerHTML=`<div class="section-title">จังหวะชีวภาพ</div><div class="row"><div><label>เวลาตื่นโดยทั่วไป</label><input type="time" id="sWake" value="${DB.profile.wake||'06:30'}"/></div><div><label>เวลานอนโดยทั่วไป</label><input type="time" id="sSleep" value="${DB.profile.sleep||'23:00'}"/></div><div><label>คะแนน rMEQ</label><input id="sRmeq" value="${DB.profile.rmeqScore??''}" placeholder="กด 'ทำแบบทดสอบ'" readonly/></div><div style="align-self:flex-end"><button class="btn" id="btnQuiz">ทำแบบทดสอบ</button></div></div><p class="small muted">โค้ชจะพยายามให้หน้าต่างกินอยู่ช่วงกลางวันและจบก่อนนอน ≥3–4 ชม.</p>`; card.appendChild(a); card.appendChild(b); v.appendChild(card);
+    $('#sTheme').value=DB.settings.theme||'system'; $('#sSave').onclick=()=>{ DB.profile.nickname=$('#sNickname').value.trim(); const h=parseFloat($('#sHeight').value); DB.profile.heightCm=isFinite(h)?h:null; DB.settings.theme=$('#sTheme').value; DB.profile.wake=$('#sWake').value||'06:30'; DB.profile.sleep=$('#sSleep').value||'23:00'; saveDB(DB); applyTheme(); toast('บันทึกแล้ว'); render('coach'); };
+    $('#btnExport').onclick=()=> dlgExport.showModal(); $('#btnImport').onclick=()=> dlgImport.showModal(); $('#btnReset').onclick=()=>{ if(confirm('ล้างข้อมูลแอพทั้งหมด?')){ localStorage.removeItem(DB_KEY); DB=loadDB(); applyTheme(); goto('today'); toast('รีเซ็ตแล้ว'); }}; $('#btnQuiz').onclick=()=> renderQuiz(); }
+
+  // Quiz rMEQ 5 ข้อ
+  const QUIZ=[
+    {q:'ตื่นเวลาใดเป็นธรรมชาติที่สุดสำหรับคุณ?', opts:['ก่อน 5:30','5:30–6:30','6:30–7:30','7:30–8:30','หลัง 8:30'], score:[5,4,3,2,1]},
+    {q:'คุณรู้สึกตื่นตัวที่สุดช่วงเวลาใดของวัน?', opts:['เช้ามาก','เช้า','บ่าย','เย็น','ดึก'], score:[5,4,3,2,1]},
+    {q:'ถ้าไม่มีข้อจำกัด คุณจะเข้านอนเวลาใด?', opts:['ก่อน 21:00','21:00–22:00','22:00–23:00','23:00–00:00','หลัง 00:00'], score:[5,4,3,2,1]},
+    {q:'คุณตื่นง่ายแค่ไหนตอนเช้า?', opts:['ง่ายมาก','ค่อนข้างง่าย','ปกติ','ยาก','ยากมาก'], score:[5,4,3,2,1]},
+    {q:'คุณคิดว่าคุณเป็นคนแบบใด?', opts:['เช้าอย่างชัดเจน','ออกเช้า','กลางๆ','ออกค่ำ','ค่ำอย่างชัดเจน'], score:[5,4,3,2,1]},
+  ];
+  function renderQuiz(){ const list=$('#quizList'); list.innerHTML=''; QUIZ.forEach((it,i)=>{ const li=document.createElement('li'); li.innerHTML=`<div><strong>${i+1}. ${it.q}</strong></div><div class="row" style="margin-top:6px">${it.opts.map((o,j)=>`<label class="pill"><input type="radio" name="q${i}" value="${j}"/> ${o}</label>`).join('')}</div>`; list.appendChild(li); }); dlgChrono.showModal(); $('#btnQuizSave').onclick=()=>{ let score=0, ok=true; QUIZ.forEach((it,i)=>{ const v=$(`input[name="q${i}"]:checked`); if(!v) ok=false; else score+= it.score[parseInt(v.value,10)]; }); if(!ok) return toast('ตอบให้ครบทุกข้อ'); DB.profile.rmeqScore=score; saveDB(DB); dlgChrono.close(); toast('บันทึกคะแนนแล้ว'); render('settings'); render('coach'); } }
+
+  // ---- Onboarding logic ----
+  let onbStep=1;
+  function showStep(n){ onbStep=n; $('#onbStep1').style.display = n===1?'grid':'none'; $('#onbStep2').style.display = n===2?'grid':'none'; $('#onbStep3').style.display = n===3?'grid':'none'; $('#btnOnbPrev').disabled = n===1; $('#btnOnbNext').textContent = n===3? 'ยืนยันและเริ่ม' : 'ถัดไป'; if(n===3) buildPlanPreview(); }
+
+  function computeInitialPlan(){
+    const h = parseFloat($('#obHeight').value); const w = parseFloat($('#obWeight').value);
+    const imc = (h && w)? (w/Math.pow(h/100,2)) : null;
+    const exp = $('#obExperience').value; const act = $('#obActivity').value;
+    const safety = { medical: $('#obHasMedical').checked, underweight: $('#obUnderweight').checked, pregnant: $('#obPregnant').checked };
+    let hrs = 16; // base
+    if(imc!=null){ if(imc<18.5) hrs=12; else if(imc<25) hrs=14; else if(imc<30) hrs=16; else hrs=18; }
+    if(exp==='beginner') hrs -= 1; if(exp==='advanced') hrs += 1; if(act==='athlete') hrs -= 1; if(act==='active' && hrs>12) hrs -= 0;
+    if(safety.medical || safety.pregnant || safety.underweight) hrs = Math.min(hrs, 14); hrs = Math.max(12, Math.min(20, Math.round(hrs)));
+    const wake = $('#obWake').value || '06:30'; const sleep = $('#obSleep').value || '23:00'; DB.profile.wake=wake; DB.profile.sleep=sleep;
+    const prefWindow = $('#obWindow').value; DB.prefs.window=prefWindow;
+    const chrono = chronoRecommendation(hrs);
+    return { hrs, chrono, bmi:imc };
+  }
+
+  function buildPlanPreview(){ const res=computeInitialPlan(); const goal = $('#obGoal').value; const rate = parseFloat($('#obRate').value)||0; const targetW = parseFloat($('#obTargetW').value)||null; const w=parseFloat($('#obWeight').value)||null; const weeks = (targetW && w && rate>0 && targetW<w) ? Math.ceil((w-targetW)/rate) : null; const bmiVal = res.bmi ? res.bmi.toFixed(1) : '-';
+    DB.goals.type=goal; DB.goals.targetWeight = targetW||null; DB.goals.targetRate=rate||0; DB.prefs.activity=$('#obActivity').value; DB.prefs.experience=$('#obExperience').value; DB.prefs.flexDays = Array.from($('#obFlexDays').selectedOptions).map(o=>parseInt(o.value,10)); DB.prefs.avoid=$('#obAvoid').value; DB.prefs.note=$('#obNote').value; DB.prefs.safety={ medical:$('#obHasMedical').checked, underweight:$('#obUnderweight').checked, pregnant:$('#obPregnant').checked };
+    $('#obPlanView').innerHTML = `<div class="list"> 
+      <div class="item"><div>⏱️ ชั่วโมงเริ่มต้นที่แนะนำ</div><div class="pill">${res.hrs} ชม.</div></div>
+      <div class="item"><div>🕒 หน้าต่างกิน</div><div class="pill">${res.chrono.start}–${res.chrono.end}</div></div>
+      <div class="item"><div>🧮 BMI (ประมาณ)</div><div class="pill">${bmiVal}</div></div>
+      <div class="item"><div>🎯 เป้าหมาย</div><div class="pill">${goal==='loss'? 'ลดน้ำหนัก' : goal==='maintain'? 'คุมน้ำหนัก' : 'วินัย/เมตาบอลิซึม'}</div></div>
+      ${weeks? `<div class='item'><div>📅 ระยะเวลาประเมิน</div><div class='pill'>~${weeks} สัปดาห์ (ที่ ${DB.goals.targetRate} กก./สัปดาห์)</div></div>`:''}
+    </div>`;
+  }
+
+  // Buttons
+  $('#btnOnbPrev').onclick=()=>{ if(onbStep>1) showStep(onbStep-1); };
+  $('#btnOnbNext').onclick=()=>{ if(onbStep<3){ if(onbStep===1){ if(!$('#obHeight').value || !$('#obWeight').value){ return toast('กรอกส่วนสูงและน้ำหนัก'); } } showStep(onbStep+1);} else { const res=computeInitialPlan(); DB.profile.nickname=$('#obNickname').value.trim(); DB.profile.heightCm=parseFloat($('#obHeight').value)||null; const w = parseFloat($('#obWeight').value); if(isFinite(w)){ DB.weights.push({dateISO: todayISO(), weight: w}); DB.weights.sort((a,b)=>a.dateISO.localeCompare(b.dateISO)); } DB.plan.fastingHrs=res.hrs; DB.plan.protocol = res.hrs + ':' + (24-res.hrs); DB.plan.feedStart=res.chrono.start; DB.plan.feedEnd=res.chrono.end; saveDB(DB); dlgOnboard.close(); goto('today'); toast('ตั้งค่าเริ่มต้นแล้ว'); render('coach'); } };
+
+  // Export/Import
+  btnDoExport.onclick=()=>{ try{ const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='if-personal.json'; document.body.appendChild(a); a.click(); a.remove(); toast('ดาวน์โหลดแล้ว'); }catch(e){ alert('ไม่สามารถส่งออก: '+e.message);} dlgExport.close(); };
+  btnDoImport.onclick=async()=>{ const f=fileImport.files?.[0]; if(!f) return alert('ยังไม่เลือกไฟล์'); try{ const text=await f.text(); const data=JSON.parse(text); if(!data||typeof data!=='object'||!('history' in data)) throw new Error('รูปแบบไม่ถูกต้อง'); DB=Object.assign(structuredClone(DEFAULTS), data); saveDB(DB); applyTheme(); toast('นำเข้าแล้ว'); goto('today'); }catch(e){ alert('นำเข้าล้มเหลว: '+e.message);} dlgImport.close(); };
+
+  // Views: Coach & Help
+  function renderCoach(v){ const s=calcStats(); const adv=coachSuggest(); const card=document.createElement('div'); card.className='grid';
+    const a=document.createElement('div'); a.className='card half'; a.innerHTML=`<div class="section-title">คำแนะนำวันนี้</div>
+      <div class="list">
+        <div class="item"><div>⏱️ เป้าหมายที่เหมาะสม</div><div class="pill">${adv.recHrs} ชม.</div></div>
+        <div class="item"><div>🕒 หน้าต่างกินที่แนะนำ</div><div class="pill">${adv.chrono.start}–${adv.chrono.end}</div></div>
+        <div class="item"><div>📊 สม่ำเสมอ 14 วัน</div><div class="pill">${(adv.adh*100).toFixed(0)}%</div></div>
+        <div class="item"><div>⚖️ แนวโน้มน้ำหนัก (ES)</div><div class="pill">${adv.wtPerWeek.toFixed(2)} กก./สัปดาห์</div></div>
+      </div>
+      <div class="row" style="margin-top:12px;gap:8px"><button class="btn primary" id="btnApplyCoach">ใช้เป้าหมายนี้</button></div>`;
+
+    const b=document.createElement('div'); b.className='card half'; b.innerHTML=`<div class="section-title">เหตุผลและเฝ้าระวัง</div>
+      <ul id="coachReasons"></ul>
+      ${adv.flags.length? `<div class="row" style="margin-top:8px">${adv.flags.map(x=>`<span class='pill warn'>${x}</span>`).join('')}</div>`:''}
+      <p class="small muted" style="margin-top:10px">คำแนะนำเป็นเชิงพฤติกรรมทั่วไป ไม่ใช่คำแนะนำทางการแพทย์</p>`;
+
+    const c=document.createElement('div'); c.className='card'; c.innerHTML=`<div class="section-title">คาดการณ์ถึงเป้าหมาย (Monte-Carlo)</div>
+      <div id="forecastBox" class="row" style="gap:10px"><span class="muted small">กำลังคำนวณ…</span></div>
+      <div class="row" style="gap:8px;margin-top:10px"><button class="btn" id="btnRerun">รันอีกครั้ง</button></div>`;
+
+    const d=document.createElement('div'); d.className='card'; d.innerHTML=`<div class="section-title">สถานะโดยสรุป</div>
+      <div class="row" style="gap:10px"><span class="pill">🔥 สตรีค ${s.streak} วัน</span><span class="pill">เฉลี่ยทั้งหมด ${s.avg.toFixed(2)} ชม.</span><span class="pill">7 วันล่าสุด ${s.last7Avg.toFixed(2)} ชม.</span><span class="pill">โปรโตคอลปัจจุบัน ${DB.plan.protocol}</span><span class="pill">หน้าต่างกิน ${DB.plan.feedStart}–${DB.plan.feedEnd}</span></div>`;
+
+    card.appendChild(a); card.appendChild(b); card.appendChild(c); card.appendChild(d); v.appendChild(card);
+
+    const reasons=$('#coachReasons'); reasons.innerHTML=''; adv.reason.forEach(r=>{ const li=document.createElement('li'); li.textContent=r; reasons.appendChild(li); });
+    $('#btnApplyCoach').onclick=()=>{ DB.plan.fastingHrs=adv.recHrs; DB.plan.protocol=adv.recHrs+':'+(24-adv.recHrs); const ch=chronoRecommendation(adv.recHrs); DB.plan.feedStart=ch.start; DB.plan.feedEnd=ch.end; saveDB(DB); toast('อัปเดตตามคำแนะนำ'); render('today'); render('schedule'); };
+
+    const box=$('#forecastBox');
+    function fillForecast(res){ if(!res){ box.innerHTML='<span class="muted small">เพิ่มน้ำหนัก ≥3 จุด และกำหนดน้ำหนักเป้าหมาย</span>'; return; } const w=(d)=> (d/7).toFixed(1); box.innerHTML=`<span class="pill">P50 ≈ ${w(res.d50)} สัปดาห์</span><span class="pill">P10 ≈ ${w(res.d10)} สัปดาห์</span><span class="pill">P90 ≈ ${w(res.d90)} สัปดาห์</span>`; }
+    if(DB.weights.length>=3 && DB.goals.targetWeight){ runForecast().then(fillForecast).catch(()=>{ box.innerHTML='<span class="muted small">คาดการณ์ไม่สำเร็จ</span>'; }); } else { fillForecast(null); }
+    $('#btnRerun').onclick=()=>{ box.innerHTML='<span class="muted small">กำลังคำนวณ…</span>'; runForecast().then(fillForecast).catch(()=>{ box.innerHTML='<span class="muted small">คาดการณ์ไม่สำเร็จ</span>'; }); };
+  }
+
+  function renderHelp(v){ const card=document.createElement('div'); card.className='card'; card.innerHTML=`<details class="help" open><summary><strong>เริ่มใช้งานเร็ว</strong></summary><ol><li>เริ่มที่แบบสอบถาม 3 ขั้น</li><li>ยืนยันแผนเริ่มต้น</li><li>เริ่มรอบจากหน้า <b>วันนี้</b></li><li>ใช้ <b>โค้ช</b> เพื่อปรับทีละสัปดาห์</li><li>ส่งออก JSON เพื่อแบ็คอัพ</li></ol></details><details class="help"><summary><strong>หลักฐานที่ใช้ออกแบบอัลกอริทึม</strong></summary><ul><li>จบหน้าต่างกินก่อนนอน ≥3–4 ชม. สอดคล้องจังหวะชีวภาพ</li><li>คุมความเข้มข้นตาม BMI/สภาวะเฝ้าระวัง</li><li>แนวโน้มใช้ Exponential Smoothing และสสุ่ม Monte-Carlo</li></ul><p class="small muted">ไม่มีงานใดในแอพนี้แทนที่คำแนะนำแพทย์</p></details>`; v.appendChild(card); }
+
+  // Init
+  function maybeOnboard(){ if(!localStorage.getItem(DB_KEY)) { dlgOnboard.showModal(); showStep(1); } }
+  buildNav(); render('today'); maybeOnboard(); weeklySnapshotIfNeeded(); startTick(); window.addEventListener('hashchange', ()=> goto(location.hash.slice(1)));
+  </script>
+</body>
+</html>
