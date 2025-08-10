@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "npx next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
@@ -14,7 +14,6 @@
     "next": "15.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "recharts": "^3.1.2",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
@@ -34,6 +33,6 @@
     "jest-environment-jsdom": "^30.0.5",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "5.9.2"
   }
 }

@@ -6,7 +6,6 @@ import { AppData } from "@/types";
 import { getAppData } from "@/lib/storage";
 import FastingHistory from "@/components/FastingHistory";
 import StatsSummary from "@/components/StatsSummary";
-import HistoryChart from "@/components/HistoryChart";
 
 export default function HistoryPage() {
   const [appData, setAppData] = useState<AppData | null>(null);
@@ -36,7 +35,6 @@ export default function HistoryPage() {
         </div>
 
         <StatsSummary stats={appData.stats} />
-        <HistoryChart fasts={appData.fasts} />
         <FastingHistory fasts={appData.fasts} />
 
       </div>

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Settings } from '@/types';
-import { useTheme } from '@/components/ThemeProvider';
 
 interface SettingsFormProps {
   initialSettings: Settings;
@@ -12,19 +11,12 @@ interface SettingsFormProps {
 const SettingsForm: React.FC<SettingsFormProps> = ({ initialSettings, onSettingsSaved }) => {
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const { setTheme } = useTheme();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'fastingMode') {
         setSettings(prev => ({ ...prev, fastingMode: value as Settings['fastingMode'] }));
     }
-  };
-
-  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newTheme = e.target.value as Settings['theme'];
-    setSettings(prev => ({ ...prev, theme: newTheme }));
-    setTheme(newTheme);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,23 +43,6 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ initialSettings, onSettings
           <option value="18:6">18:6</option>
           <option value="20:4">20:4</option>
           <option value="OMAD">OMAD (One Meal a Day)</option>
-        </select>
-      </div>
-
-      <div>
-        <label htmlFor="theme" className="block text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">
-          Theme
-        </label>
-        <select
-          id="theme"
-          name="theme"
-          value={settings.theme}
-          onChange={handleThemeChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-        >
-          <option value="system">System</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
         </select>
       </div>
 
